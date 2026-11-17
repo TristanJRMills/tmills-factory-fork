@@ -19,6 +19,7 @@ export {
   computeResult,
   getBestAttempt,
   getQuizByLessonId,
+  getQuizForLesson,
   getQuizWithQuestions,
 } from "./lib/quiz.server";
 export {
