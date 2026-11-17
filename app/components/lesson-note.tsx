@@ -5,7 +5,7 @@ import { Button } from "~/components/ui/button";
 import { Card, CardContent } from "~/components/ui/card";
 import { Textarea } from "~/components/ui/textarea";
 import { cn, formatRelativeTime } from "~/lib/utils";
-import { describeNoteDraft } from "~/modules/lesson-note";
+import { describeNoteDraft, type NoteDraftState } from "~/modules/lesson-note";
 
 export function LessonNote({
   note,
@@ -16,10 +16,7 @@ export function LessonNote({
   const [draft, setDraft] = useState(note?.body ?? "");
   const isSaving = fetcher.state !== "idle";
   const error = fetcher.data?.error;
-  const { length, max, tooLong, unsaved, canSave } = describeNoteDraft(
-    draft,
-    note?.body ?? null
-  );
+  const state = describeNoteDraft(draft, note?.body ?? null);
 
   return (
     <Card className="mb-8">
@@ -28,7 +25,7 @@ export function LessonNote({
           <NoteHeading />
           <NoteStatus
             isSaving={isSaving}
-            unsaved={unsaved}
+            unsaved={state.unsaved}
             updatedAt={note?.updatedAt ?? null}
           />
         </div>
@@ -40,18 +37,11 @@ export function LessonNote({
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
             aria-label="Your notes on this lesson"
-            aria-invalid={tooLong || undefined}
+            aria-invalid={state.tooLong || undefined}
             placeholder="Key ideas, questions to ask, code to try later..."
             className="min-h-32 resize-y"
           />
-          <NoteFooter
-            canSave={canSave && !isSaving}
-            isSaving={isSaving}
-            error={error}
-            length={length}
-            max={max}
-            tooLong={tooLong}
-          />
+          <NoteFooter state={state} isSaving={isSaving} error={error} />
         </fetcher.Form>
       </CardContent>
     </Card>
@@ -59,33 +49,30 @@ export function LessonNote({
 }
 
 function NoteFooter({
-  canSave,
+  state,
   isSaving,
   error,
-  length,
-  max,
-  tooLong,
 }: {
-  canSave: boolean;
+  state: NoteDraftState;
   isSaving: boolean;
   error: string | undefined;
-  length: number;
-  max: number;
-  tooLong: boolean;
 }) {
+  // A cleared or over-long edit disables Save, so say why instead of
+  // leaving the button greyed out with no reason.
+  const message = error ?? (state.unsaved ? state.problem : null);
   return (
     <div className="flex items-center gap-3">
-      <Button type="submit" size="sm" disabled={!canSave}>
+      <Button type="submit" size="sm" disabled={!state.canSave || isSaving}>
         {isSaving ? "Saving..." : "Save note"}
       </Button>
-      {error && <span className="text-sm text-destructive">{error}</span>}
+      {message && <span className="text-sm text-destructive">{message}</span>}
       <span
         className={cn(
           "ml-auto text-xs",
-          tooLong ? "text-destructive" : "text-muted-foreground"
+          state.tooLong ? "text-destructive" : "text-muted-foreground"
         )}
       >
-        {length} / {max}
+        {state.length} / {state.max}
       </span>
     </div>
   );

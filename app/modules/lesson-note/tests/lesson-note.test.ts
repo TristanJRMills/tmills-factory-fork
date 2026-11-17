@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { describeNoteDraft } from "../index";
+import { describeNoteDraft, saveNoteSchema } from "../index";
 import { MAX_NOTE_LENGTH } from "~/lib/notes";
 
 describe("describeNoteDraft", () => {
@@ -11,6 +11,7 @@ describe("describeNoteDraft", () => {
       tooLong: false,
       empty: true,
       unsaved: false,
+      problem: "Write something before saving your note.",
       canSave: false,
     });
   });
@@ -71,5 +72,22 @@ describe("describeNoteDraft", () => {
   it("measures the trimmed draft against the limit", () => {
     const state = describeNoteDraft(` ${"a".repeat(MAX_NOTE_LENGTH)} `, null);
     expect(state.tooLong).toBe(false);
+  });
+
+  it("explains why a cleared note cannot be saved", () => {
+    const state = describeNoteDraft("  ", "Cursor pagination");
+    expect(state.problem).toBe("Write something before saving your note.");
+  });
+
+  it("explains why an over-long draft cannot be saved", () => {
+    const state = describeNoteDraft("a".repeat(MAX_NOTE_LENGTH + 1), null);
+    expect(state.problem).toMatch(/so it was not saved/);
+  });
+
+  it("refuses exactly the drafts the save-note action refuses", () => {
+    for (const draft of ["", " ", "a", "a".repeat(MAX_NOTE_LENGTH + 1)]) {
+      const accepted = saveNoteSchema.safeParse({ body: draft }).success;
+      expect(describeNoteDraft(draft, null).canSave).toBe(accepted);
+    }
   });
 });
