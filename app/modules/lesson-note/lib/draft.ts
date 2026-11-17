@@ -18,7 +18,6 @@ export type NoteDraftState = {
   length: number;
   max: number;
   tooLong: boolean;
-  empty: boolean;
   /** The draft differs from the saved body, which the action stored trimmed. */
   unsaved: boolean;
   /** Why the action would refuse this draft, or null if it would accept it. */
@@ -39,7 +38,6 @@ export function noteDraftState(
     length,
     max: MAX_NOTE_LENGTH,
     tooLong: length > MAX_NOTE_LENGTH,
-    empty: length === 0,
     unsaved,
     problem,
     canSave: unsaved && problem === null,

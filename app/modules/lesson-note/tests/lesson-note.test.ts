@@ -9,7 +9,6 @@ describe("describeNoteDraft", () => {
       length: 0,
       max: MAX_NOTE_LENGTH,
       tooLong: false,
-      empty: true,
       unsaved: false,
       problem: "Write something before saving your note.",
       canSave: false,
@@ -18,7 +17,7 @@ describe("describeNoteDraft", () => {
 
   it("treats a whitespace-only draft as empty", () => {
     const state = describeNoteDraft("   \n ", null);
-    expect(state.empty).toBe(true);
+    expect(state.problem).toBe("Write something before saving your note.");
     expect(state.length).toBe(0);
     expect(state.canSave).toBe(false);
   });
